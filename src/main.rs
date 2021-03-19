@@ -2,7 +2,7 @@
     type board = [[i8; 3]; 3];
     [
         [-1, -1, -1],
-        [-1, -1, '-1],
+        [-1, -1, -1],
         [-1, -1, -1]
     ];
 */
@@ -23,6 +23,7 @@ fn input(message: &str) -> usize {
         .expect("Type a number!");
 }
 
+#[derive(Clone)]
 struct TicTacToe {
     board: Board,
     turn: i8,
@@ -46,7 +47,7 @@ impl TicTacToe {
             status: 2,
             message: String::new(),
         };
-        game.status = game.is_game_over();
+        game.status = game.is_game_over(None);
         return game;
     }
     fn swap_turn(&mut self) {
@@ -65,7 +66,10 @@ impl TicTacToe {
         }
         return formated_turn;
     }
-    fn is_game_over(&self) -> i8 {
+    fn is_game_over(&self, relative_to: Option<i8>) -> i8 {
+        let relative_to = relative_to
+            .or_else(|| Some(self.turn))
+            .expect("Some err, tic_tac_toe new!");
         let winning_positions: Winning = [
             [[0, 0], [0, 1], [0, 2]],
             [[1, 0], [1, 1], [1, 2]],
@@ -82,12 +86,21 @@ impl TicTacToe {
             for (position_i, &winning_position) in winnin_sequences.iter().enumerate() {
                 values[position_i] = self.board[winning_position[0]][winning_position[1]];
             }
-            if values[0] == self.turn && values[1] == self.turn && values[2] == self.turn {
+            if values[0] == relative_to && values[1] == relative_to && values[2] == relative_to {
                 game_status = 1;
+                break;
+            } else if values[0] != -1
+                && values[1] != -1
+                && values[2] != -1
+                && values[0] != relative_to
+                && values[1] != relative_to
+                && values[2] != relative_to
+            {
+                game_status = -1;
                 break;
             }
         }
-        if game_status == 1 {
+        if game_status == 1 || game_status == -1 {
             return game_status;
         }
         let mut did_tie = true;
@@ -152,10 +165,93 @@ impl TicTacToe {
                     String::from("You can not put a value in a position that already has a value!");
                 continue;
             }
-            self.status = self.is_game_over();
-            self.swap_turn();
+            self.status = self.is_game_over(None);
+            if self.status == 2 {
+                self.swap_turn();
+                let best_move = minimax(self.clone(), 0, true, 1);
+                self.make_move(&best_move.row, &best_move.column);
+                self.status = self.is_game_over(None);
+                self.swap_turn();
+            }
         }
-        println!("Player {} won!", self.get_formated_turn());
+        if self.status == 1 {
+            println!("Player {} won!", self.get_formated_turn());
+        } else if self.status == 0 {
+            println!("Tie!");
+        }
+    }
+}
+
+// Minimax
+#[derive(Copy, Clone, Debug)]
+struct Score {
+    row: usize,
+    column: usize,
+    score: i8,
+    depth: u64,
+}
+
+fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Score {
+    let current_game_status = game.is_game_over(Some(player));
+    if current_game_status < 2 {
+        return Score {
+            row: 0,
+            column: 0,
+            score: current_game_status,
+            depth: depth,
+        };
+    }
+
+    if is_maximizing {
+        let mut best_score = Score {
+            row: 0,
+            column: 0,
+            score: -2,
+            depth: 200,
+        };
+        for (row_i, &row) in game.board.clone().iter().enumerate() {
+            for (column_i, &column) in row.iter().enumerate() {
+                if column == -1 {
+                    let mut next_game: TicTacToe = game.clone();
+                    next_game.make_move(&row_i, &column_i);
+                    next_game.swap_turn();
+                    let next_game_score = minimax(next_game, depth + 1, !is_maximizing, player);
+                    if best_score.score < next_game_score.score {
+                        best_score = Score {
+                            row: row_i,
+                            column: column_i,
+                            ..next_game_score
+                        };
+                    }
+                }
+            }
+        }
+        return best_score;
+    } else {
+        let mut best_score = Score {
+            row: 0,
+            column: 0,
+            score: 5,
+            depth: 200,
+        };
+        for (row_i, &row) in game.board.clone().iter().enumerate() {
+            for (column_i, &column) in row.iter().enumerate() {
+                if column == -1 {
+                    let mut next_game: TicTacToe = game.clone();
+                    next_game.make_move(&row_i, &column_i);
+                    next_game.swap_turn();
+                    let next_game_score = minimax(next_game, depth + 1, !is_maximizing, player);
+                    if best_score.score > next_game_score.score {
+                        best_score = Score {
+                            row: row_i,
+                            column: column_i,
+                            ..next_game_score
+                        };
+                    }
+                }
+            }
+        }
+        return best_score;
     }
 }
 
