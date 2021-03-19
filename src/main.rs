@@ -30,15 +30,24 @@ struct TicTacToe {
     status: i8,
     message: String,
     debug: bool,
+    ai_debug: bool,
 }
 impl TicTacToe {
-    fn new(board: Option<Board>, turn: Option<i8>, debug: Option<bool>) -> TicTacToe {
+    fn new(
+        board: Option<Board>,
+        turn: Option<i8>,
+        debug: Option<bool>,
+        ai_debug: Option<bool>,
+    ) -> TicTacToe {
         let default_board = [[-1, -1, -1], [-1, -1, -1], [-1, -1, -1]];
         let mut game = TicTacToe {
             board: board
                 .or_else(|| Some(default_board))
                 .expect("Some err, tic_tac_toe new!"),
             debug: debug
+                .or_else(|| Some(false))
+                .expect("Some err, tic_tac_toe new!"),
+            ai_debug: ai_debug
                 .or_else(|| Some(false))
                 .expect("Some err, tic_tac_toe new!"),
             turn: turn
@@ -169,6 +178,10 @@ impl TicTacToe {
             if self.status == 2 {
                 self.swap_turn();
                 let best_move = minimax(self.clone(), 0, true, 1);
+                if self.ai_debug {
+                    self.message
+                        .push_str(&format!("DEPTH: {}", best_move.depth));
+                }
                 self.make_move(&best_move.row, &best_move.column);
                 self.status = self.is_game_over(None);
                 self.swap_turn();
@@ -256,6 +269,6 @@ fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Scor
 }
 
 fn main() {
-    let mut game = TicTacToe::new(None, None, None);
+    let mut game = TicTacToe::new(None, None, None, Some(true));
     game.start();
 }
