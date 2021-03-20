@@ -1,3 +1,7 @@
+// Debug
+const GAME_DEBUG: bool = false;
+const AI_DEBUG: bool = true;
+
 /*
     type board = [[i8; 3]; 3];
     [
@@ -318,7 +322,14 @@ fn main() {
     let mut game: TicTacToe;
 
     if game_mode == 1 {
-        game = TicTacToe::new(real_player, real_player, None, None, None, Some(true));
+        game = TicTacToe::new(
+            real_player,
+            real_player,
+            None,
+            None,
+            Some(GAME_DEBUG),
+            Some(AI_DEBUG),
+        );
         game.start();
     } else {
         let game_turn = input(
@@ -327,10 +338,24 @@ fn main() {
 [1] Second.",
         );
         if game_turn == 0 {
-            game = TicTacToe::new(real_player, minimax_player, None, None, None, Some(true));
+            game = TicTacToe::new(
+                real_player,
+                minimax_player,
+                None,
+                None,
+                Some(GAME_DEBUG),
+                Some(AI_DEBUG),
+            );
             game.start();
         } else {
-            game = TicTacToe::new(minimax_player, real_player, None, None, None, Some(true));
+            game = TicTacToe::new(
+                minimax_player,
+                real_player,
+                None,
+                None,
+                Some(GAME_DEBUG),
+                Some(AI_DEBUG),
+            );
             game.start();
         }
     }
