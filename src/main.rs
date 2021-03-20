@@ -8,7 +8,16 @@
 */
 type Board = [[i8; 3]; 3];
 type Winning = [[[usize; 2]; 3]; 8];
+struct Move {
+    row: usize,
+    column: usize,
+}
+type PlayerCallback = fn(&mut TicTacToe) -> Move;
 
+// Helpers
+fn console_clear() {
+    std::process::Command::new("clear").status().unwrap();
+}
 fn input(message: &str) -> usize {
     let mut value = String::new();
     println!("{}", message);
@@ -25,6 +34,8 @@ fn input(message: &str) -> usize {
 
 #[derive(Clone)]
 struct TicTacToe {
+    player1: PlayerCallback,
+    player2: PlayerCallback,
     board: Board,
     turn: i8,
     status: i8,
@@ -34,6 +45,8 @@ struct TicTacToe {
 }
 impl TicTacToe {
     fn new(
+        player1: PlayerCallback,
+        player2: PlayerCallback,
         board: Option<Board>,
         turn: Option<i8>,
         debug: Option<bool>,
@@ -41,6 +54,8 @@ impl TicTacToe {
     ) -> TicTacToe {
         let default_board = [[-1, -1, -1], [-1, -1, -1], [-1, -1, -1]];
         let mut game = TicTacToe {
+            player1,
+            player2,
             board: board
                 .or_else(|| Some(default_board))
                 .expect("Some err, tic_tac_toe new!"),
@@ -137,7 +152,7 @@ impl TicTacToe {
         return false;
     }
     fn draw(&mut self) {
-        std::process::Command::new("clear").status().unwrap();
+        console_clear();
         println!("{}", self.message);
         self.message = String::new();
         println!("\nColumn:   | 0 | | 1 | | 2 | ");
@@ -164,28 +179,23 @@ impl TicTacToe {
         println!("Turn: {}", self.get_formated_turn());
     }
     fn start(&mut self) {
+        let pos_already_taked_msg =
+            "You can not put a value in a position that already has a value!";
         while self.status == 2 {
             self.draw();
-            let row = input("What is the row?");
-            let column = input("What is the column?");
-            let did_move = self.make_move(&row, &column);
+            let player_move: Move;
+            if self.turn == 0 {
+                player_move = (self.player1)(self);
+            } else {
+                player_move = (self.player2)(self);
+            }
+            let did_move = self.make_move(&player_move.row, &player_move.column);
             if !did_move {
-                self.message =
-                    String::from("You can not put a value in a position that already has a value!");
+                self.message = String::from(pos_already_taked_msg);
                 continue;
             }
             self.status = self.is_game_over(None);
-            if self.status == 2 {
-                self.swap_turn();
-                let best_move = minimax(self.clone(), 0, true, 1);
-                if self.ai_debug {
-                    self.message
-                        .push_str(&format!("DEPTH: {}", best_move.depth));
-                }
-                self.make_move(&best_move.row, &best_move.column);
-                self.status = self.is_game_over(None);
-                self.swap_turn();
-            }
+            self.swap_turn();
         }
         if self.status == 1 {
             println!("Player {} won!", self.get_formated_turn());
@@ -268,7 +278,53 @@ fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Scor
     }
 }
 
+// Players
+fn real_player(game: &mut TicTacToe) -> Move {
+    let row = input("What is the row?");
+    let column = input("What is the column?");
+
+    return Move { row, column };
+}
+fn minimax_player(game: &mut TicTacToe) -> Move {
+    let best_move = minimax(game.clone(), 0, true, game.turn);
+    if game.ai_debug {
+        game.message
+            .push_str(&format!("DEPTH: {}", best_move.depth));
+    }
+
+    return Move {
+        row: best_move.row,
+        column: best_move.column,
+    };
+}
+
 fn main() {
-    let mut game = TicTacToe::new(None, None, None, Some(true));
-    game.start();
+    console_clear();
+    let game_mode = input(
+        "Choose a game mode:
+
+[0] Play against computer.
+
+[1] Play against other player.",
+    );
+
+    let mut game: TicTacToe;
+
+    if game_mode == 1 {
+        game = TicTacToe::new(real_player, real_player, None, None, None, Some(true));
+        game.start();
+    } else {
+        let game_turn = input(
+            "Do you want to be the first or second to move?
+[0] First.
+[1] Second.",
+        );
+        if game_turn == 0 {
+            game = TicTacToe::new(real_player, minimax_player, None, None, None, Some(true));
+            game.start();
+        } else {
+            game = TicTacToe::new(minimax_player, real_player, None, None, None, Some(true));
+            game.start();
+        }
+    }
 }
