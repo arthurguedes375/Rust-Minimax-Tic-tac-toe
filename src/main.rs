@@ -214,6 +214,21 @@ struct Score {
     depth: u64,
 }
 
+fn minimax_min(best_score: &mut Score, next_game_score: &Score) -> bool {
+    if best_score.score > next_game_score.score {
+        return true;
+    }
+
+    return false;
+}
+fn minimax_max(best_score: &mut Score, next_game_score: &Score) -> bool {
+    if best_score.score < next_game_score.score {
+        return true;
+    }
+
+    return false;
+}
+
 fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Score {
     let current_game_status = game.is_game_over(Some(player));
     if current_game_status < 2 {
@@ -225,57 +240,49 @@ fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Scor
         };
     }
 
+    let mut best_score: Score;
+
     if is_maximizing {
-        let mut best_score = Score {
+        best_score = Score {
             row: 0,
             column: 0,
             score: -2,
             depth: 200,
         };
-        for (row_i, &row) in game.board.clone().iter().enumerate() {
-            for (column_i, &column) in row.iter().enumerate() {
-                if column == -1 {
-                    let mut next_game: TicTacToe = game.clone();
-                    next_game.make_move(&row_i, &column_i);
-                    next_game.swap_turn();
-                    let next_game_score = minimax(next_game, depth + 1, !is_maximizing, player);
-                    if best_score.score < next_game_score.score {
-                        best_score = Score {
-                            row: row_i,
-                            column: column_i,
-                            ..next_game_score
-                        };
-                    }
-                }
-            }
-        }
-        return best_score;
     } else {
-        let mut best_score = Score {
+        best_score = Score {
             row: 0,
             column: 0,
             score: 5,
             depth: 200,
         };
-        for (row_i, &row) in game.board.clone().iter().enumerate() {
-            for (column_i, &column) in row.iter().enumerate() {
-                if column == -1 {
-                    let mut next_game: TicTacToe = game.clone();
-                    next_game.make_move(&row_i, &column_i);
-                    next_game.swap_turn();
-                    let next_game_score = minimax(next_game, depth + 1, !is_maximizing, player);
-                    if best_score.score > next_game_score.score {
-                        best_score = Score {
-                            row: row_i,
-                            column: column_i,
-                            ..next_game_score
-                        };
-                    }
+    }
+
+    for (row_i, &row) in game.board.clone().iter().enumerate() {
+        for (column_i, &column) in row.iter().enumerate() {
+            if column == -1 {
+                let mut next_game: TicTacToe = game.clone();
+                next_game.make_move(&row_i, &column_i);
+                next_game.swap_turn();
+                let next_game_score = minimax(next_game, depth + 1, !is_maximizing, player);
+                let new_best_move: bool;
+                if is_maximizing {
+                    new_best_move = minimax_max(&mut best_score, &next_game_score);
+                } else {
+                    new_best_move = minimax_min(&mut best_score, &next_game_score);
+                }
+
+                if new_best_move == true {
+                    best_score = Score {
+                        row: row_i,
+                        column: column_i,
+                        ..next_game_score
+                    };
                 }
             }
         }
-        return best_score;
     }
+    return best_score;
 }
 
 // Players
