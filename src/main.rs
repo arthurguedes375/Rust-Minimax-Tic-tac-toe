@@ -2,6 +2,9 @@
 const GAME_DEBUG: bool = false;
 const AI_DEBUG: bool = true;
 
+// Ai Settings
+const AI_DEPTH: u64 = 500;
+
 /*
     type board = [[i8; 3]; 3];
     [
@@ -235,7 +238,7 @@ fn minimax_max(best_score: &mut Score, next_game_score: &Score) -> bool {
 
 fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Score {
     let current_game_status = game.is_game_over(Some(player));
-    if current_game_status < 2 {
+    if current_game_status < 2 || depth == 0 {
         return Score {
             row: 0,
             column: 0,
@@ -268,7 +271,7 @@ fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Scor
                 let mut next_game: TicTacToe = game.clone();
                 next_game.make_move(&row_i, &column_i);
                 next_game.swap_turn();
-                let next_game_score = minimax(next_game, depth + 1, !is_maximizing, player);
+                let next_game_score = minimax(next_game, depth - 1, !is_maximizing, player);
                 let new_best_move: bool;
                 if is_maximizing {
                     new_best_move = minimax_max(&mut best_score, &next_game_score);
@@ -297,10 +300,10 @@ fn real_player(_game: &mut TicTacToe) -> Move {
     return Move { row, column };
 }
 fn minimax_player(game: &mut TicTacToe) -> Move {
-    let best_move = minimax(game.clone(), 0, true, game.turn);
+    let best_move = minimax(game.clone(), AI_DEPTH, true, game.turn);
     if game.ai_debug {
         game.message
-            .push_str(&format!("DEPTH: {}", best_move.depth));
+            .push_str(&format!("DEPTH: {}", AI_DEPTH - best_move.depth));
     }
 
     return Move {
