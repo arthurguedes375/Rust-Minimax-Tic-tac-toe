@@ -279,7 +279,7 @@ fn minimax(game: TicTacToe, depth: u64, is_maximizing: bool, player: i8) -> Scor
 }
 
 // Players
-fn real_player(game: &mut TicTacToe) -> Move {
+fn real_player(_game: &mut TicTacToe) -> Move {
     let row = input("What is the row?");
     let column = input("What is the column?");
 
