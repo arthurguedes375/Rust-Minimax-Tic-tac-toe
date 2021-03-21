@@ -33,6 +33,7 @@ fn input(message: &str) -> usize {
         .read_line(&mut value)
         .expect("Something went wrong!");
     return value
+        .trim()
         .replace("\n", "")
         .to_string()
         .parse::<usize>()
@@ -152,6 +153,12 @@ impl TicTacToe {
         return game_status;
     }
     fn make_move(&mut self, row: &usize, column: &usize) -> bool {
+        if *row >= self.board.len() {
+            return false;
+        }
+        if *column >= self.board[*row].len() {
+            return false;
+        }
         if self.board[*row][*column] == -1 {
             self.board[*row][*column] = self.turn;
             return true;
@@ -162,10 +169,10 @@ impl TicTacToe {
         console_clear();
         println!("{}", self.message);
         self.message = String::new();
-        println!("\nColumn:   | 0 | | 1 | | 2 | ");
+        println!("\nColumn:   | 1 | | 2 | | 3 | ");
         println!("          _________________");
         for (row_i, &row) in self.board.iter().enumerate() {
-            print!("Row: {}    ", row_i);
+            print!("Row: {}    ", row_i + 1);
             for (_column_i, &column_v) in row.iter().enumerate() {
                 let mut formated_value = ' ';
                 if column_v == 0 {
@@ -187,7 +194,7 @@ impl TicTacToe {
     }
     fn start(&mut self) {
         let pos_already_taked_msg =
-            "You can not put a value in a position that already has a value!";
+            "You might have typed the wrong row or column, or the position that you typed is not available.";
         while self.status == 2 {
             self.draw();
             let player_move: Move;
@@ -330,8 +337,8 @@ fn minimax(
 
 // Players
 fn real_player(_game: &mut TicTacToe) -> Move {
-    let row = input("What is the row?");
-    let column = input("What is the column?");
+    let row = input("What is the row?") - 1;
+    let column = input("What is the column?") - 1;
 
     return Move { row, column };
 }
@@ -353,14 +360,14 @@ fn main() {
     let game_mode = input(
         "Choose a game mode:
 
-[0] Play against computer.
+[1] Play against computer.
 
-[1] Play against other player.",
+[2] Play against other player.",
     );
 
     let mut game: TicTacToe;
 
-    if game_mode == 1 {
+    if game_mode == 2 {
         game = TicTacToe::new(
             real_player,
             real_player,
@@ -373,10 +380,10 @@ fn main() {
     } else {
         let game_turn = input(
             "Do you want to be the first or second to move?
-[0] First.
-[1] Second.",
+[1] First.
+[2] Second.",
         );
-        if game_turn == 0 {
+        if game_turn == 1 {
             game = TicTacToe::new(
                 real_player,
                 minimax_player,
