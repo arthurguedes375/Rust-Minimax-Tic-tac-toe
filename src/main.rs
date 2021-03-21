@@ -226,6 +226,7 @@ struct Score {
     column: usize,
     score: i8,
     depth: u64,
+    comparitions: u64,
 }
 
 fn minimax_min(best_score: &Score, next_game_score: &Score) -> bool {
@@ -242,7 +243,6 @@ fn minimax_max(best_score: &Score, next_game_score: &Score) -> bool {
 
     return false;
 }
-
 /*
     alpha is the best score
     beta is the worst score,
@@ -257,7 +257,9 @@ fn minimax(
     beta: i8,
     is_maximizing: bool,
     player: i8,
+    comparitions: u64,
 ) -> Score {
+    let mut comparitions = comparitions;
     let mut alpha = alpha;
     let mut beta = beta;
     let current_game_status = game.is_game_over(Some(player));
@@ -266,7 +268,8 @@ fn minimax(
             row: 0,
             column: 0,
             score: current_game_status,
-            depth: depth,
+            depth,
+            comparitions,
         };
     }
 
@@ -278,6 +281,7 @@ fn minimax(
             column: 0,
             score: -2,
             depth: 200,
+            comparitions: 0,
         };
     } else {
         best_score = Score {
@@ -285,6 +289,7 @@ fn minimax(
             column: 0,
             score: 5,
             depth: 200,
+            comparitions: 0,
         };
     }
 
@@ -292,12 +297,20 @@ fn minimax(
         let mut found: bool = false;
         for (column_i, &column) in row.iter().enumerate() {
             if column == -1 {
+                comparitions += 1;
                 let mut next_game: TicTacToe = game.clone();
                 next_game.make_move(&row_i, &column_i);
                 next_game.swap_turn();
 
-                let next_game_score =
-                    minimax(next_game, depth - 1, alpha, beta, !is_maximizing, player);
+                let next_game_score = minimax(
+                    next_game,
+                    depth - 1,
+                    alpha,
+                    beta,
+                    !is_maximizing,
+                    player,
+                    comparitions,
+                );
 
                 let new_best_move: bool;
 
@@ -343,10 +356,13 @@ fn real_player(_game: &mut TicTacToe) -> Move {
     return Move { row, column };
 }
 fn minimax_player(game: &mut TicTacToe) -> Move {
-    let best_move = minimax(game.clone(), AI_DEPTH, -5, 5, true, game.turn);
+    let best_move = minimax(game.clone(), AI_DEPTH, -5, 5, true, game.turn, 0);
     if game.ai_debug {
-        game.message
-            .push_str(&format!("DEPTH: {}", AI_DEPTH - best_move.depth));
+        game.message.push_str(&format!(
+            "Minimax(AI): \nDEPTH: {}\nComparitions: {}\n------------------------------------------------------",
+            AI_DEPTH - best_move.depth,
+            best_move.comparitions,
+        ));
     }
 
     return Move {
