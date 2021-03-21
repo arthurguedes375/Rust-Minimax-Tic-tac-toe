@@ -6,7 +6,7 @@ If you want to know it's theory you can watch these two videos: [Theory Video](h
 
 
 ## Dev Notes:
-- If you want to debug the app you can set the var ``` GAME_DEBUG ``` as true to debug the game, and you can set ``` AI_DEBUG ``` as true to see the minimax depth
+- If you want to debug the app you can set the var ``` GAME_DEBUG ``` as true to debug the game, and you can set ``` AI_DEBUG ``` as true to debug the minimax
 - You can change the AI's depth setting the var ``` AI_DEPTH ``` as the depth that you want the AI to search
 
 <p align="center">Made with :heart: <strong>Arthur Guedes</strong></p>
