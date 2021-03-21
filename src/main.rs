@@ -297,7 +297,13 @@ fn minimax(
         let mut found: bool = false;
         for (column_i, &column) in row.iter().enumerate() {
             if column == -1 {
-                comparitions += 1;
+                /*
+                This number is += 4 because the first comparison that we make is when we call the minimax
+                The second one is when we call the minimax_max or the minimax_min
+                The third one is when we verify if the beta or alpha is greater or less than the next game score
+                The fourth one is when we verify if the beta is less or equal than the alpha
+                */
+                comparitions += 4;
                 let mut next_game: TicTacToe = game.clone();
                 next_game.make_move(&row_i, &column_i);
                 next_game.swap_turn();
